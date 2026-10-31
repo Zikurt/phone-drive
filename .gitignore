@@ -1,0 +1,17 @@
+# Transient build artifacts (created when rebuilding while the app is running)
+bin/PhoneDrive.old.exe
+*.old.exe
+
+# Visual Studio / editor
+.vs/
+*.suo
+*.user
+obj/
+Debug/
+Release/
+*.sln.cache
+
+# OS noise
+Thumbs.db
+Desktop.ini
+.DS_Store
