@@ -23,9 +23,6 @@ namespace PhoneDrive
         /// <summary>Не создавать точку доступа, а работать через текущую домашнюю сеть.</summary>
         public bool UseHomeNetwork = false;
 
-        /// <summary>Адрес сервера, заданный вручную (пусто — определяем автоматически).</summary>
-        public string IpOverride = "";
-
         private const string AlphabetLower = "abcdefghjkmnpqrstuvwxyz";
         private const string AlphabetUpper = "ABCDEFGHJKMNPQRSTUVWXYZ";
         private const string AlphabetDigit = "23456789";
@@ -84,7 +81,6 @@ namespace PhoneDrive
                     {
                         case "folder": cfg.Folder = value; break;
                         case "ssid": cfg.Ssid = value; break;
-                        case "ip": cfg.IpOverride = value; break;
                         case "wifi_password": cfg.WifiPassword = value; break;
                         case "login": cfg.Login = value; break;
                         case "login_password": cfg.LoginPassword = value; break;
@@ -137,7 +133,6 @@ namespace PhoneDrive
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("# Настройки Wi-Fi Флешки");
                 sb.AppendLine("folder=" + Folder);
-                sb.AppendLine("ip=" + IpOverride);
                 sb.AppendLine("ssid=" + Ssid);
                 sb.AppendLine("wifi_password=" + WifiPassword);
                 sb.AppendLine("login=" + Login);
