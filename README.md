@@ -42,7 +42,11 @@ The files stay on your PC: nothing is uploaded, copied or synced.
   `net.exe` / `icacls` / `netsh`. The Wi-Fi Direct hotspot (offline mode) is the
   only thing that requires PowerShell.
 - **Compact window.** The *Instruction* and *Journal* panels are toggled by buttons
-  in the top bar; the window resizes itself accordingly.
+  in the top bar; the window resizes itself accordingly. The Instruction starts
+  collapsed so the app stays compact.
+- **Editable server address.** When the auto-detected IP is wrong (e.g. several
+  network adapters), you can type the server IP in the left panel next to
+  `Folder` — leave it empty to detect it automatically again.
 - **Safe and reversible.** A dedicated Windows user is created for phone logins, a
   firewall rule is opened only for the hotspot/home subnet, and everything is removed
   with a single "cleanup" button. Passwords are generated randomly on first run.
@@ -66,8 +70,11 @@ The files stay on your PC: nothing is uploaded, copied or synced.
 2. Pick the folder you want to share (default `C:\Users\<you>\PhoneDrive`).
 3. Click **«Включить»** (Start) and approve the UAC prompt.
 4. In the top bar you can open **«Инструкция»** (guide) and **«Журнал»** (log);
-   they open and close together with the window. After starting, the guide
-   keeps only the server address (plus one hint) so you always see what to type.
+   they open and close together with the window. The guide starts collapsed to
+   keep the window compact; once sharing is running it shows the iPhone steps
+   plus the server address. You can also type the server IP manually in the
+   **«Адрес сервера»** field (leave it empty for automatic detection, the
+   **«Авто»** button clears it).
 5. The right panel shows the network name, Wi-Fi password and
    server address. Passwords in the fields on the left are hidden — press
    **«показать»** (show) next to a field to reveal it.
@@ -230,9 +237,10 @@ MIT — see [LICENSE](LICENSE).
 2. Выберите папку (по умолчанию `C:\Users\<вы>\PhoneDrive`).
 3. Нажмите **«Включить»** и разрешите запрос UAC.
 4. В верхней графе есть кнопки **«Инструкция»** и **«Журнал»** — панели открываются
-   и закрываются по щелчку, а окно само подстраивается под них. Когда доступ уже
-   включён, инструкция показывает только адрес сервера, чтобы вы всегда видели,
-   какой адрес вводить.
+   и закрываются по щелчку, а окно само подстраивается под них. При старте
+   инструкция свёрнута, чтобы окно оставалось компактным; когда доступ уже включён,
+   в ней видны шаги для iPhone и адрес сервера. Адрес сервера можно задать вручную
+   в поле **«Адрес сервера»** (пусто — определяется автоматически, кнопка «Авто»).
 5. Пароли в полях слева скрыты — нажмите **«показать»** рядом с нужным полем.
 
 > **Если компьютер и iPhone уже в одной домашней сети**, поставьте галочку

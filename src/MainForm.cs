@@ -50,6 +50,8 @@ namespace PhoneDrive
 
         // --- элементы управления ---------------------------------------------
         private TextBox _txtFolder;
+        private TextBox _txtServerIp;
+        private Button _btnAutoIp;
         private TextBox _txtSsid;
         private TextBox _txtWifiPass;
         private TextBox _txtLogin;
@@ -70,10 +72,11 @@ namespace PhoneDrive
         private Panel _leftPanel;
         private Panel _rightPanel;
         private Panel _logPanel;
+        private Label _lblSubtitle;
         private Button _btnGuide;
         private Button _btnLog;
         private CheckBox _chkShowPass;
-        private bool _guideVisible = true;
+        private bool _guideVisible = false;
 
         public MainForm(bool autoStart)
         {
@@ -120,7 +123,7 @@ namespace PhoneDrive
             Font = new Font("Segoe UI", 9f);
             AutoScaleMode = AutoScaleMode.Dpi;
             AutoScaleDimensions = new SizeF(96f, 96f);
-            ClientSize = new Size(1028, 520);
+            ClientSize = new Size(1028, 540);
             StartPosition = FormStartPosition.CenterScreen;
             DoubleBuffered = true;
 
@@ -156,6 +159,7 @@ namespace PhoneDrive
             subtitle.AutoSize = true;
             subtitle.Location = new Point(18, 34);
             header.Controls.Add(subtitle);
+            _lblSubtitle = subtitle;
 
             _btnGuide = MakeViewButton("Инструкция", 118);
             _btnGuide.Location = new Point(header.Width - 16 - 118, 11);
@@ -173,7 +177,7 @@ namespace PhoneDrive
             Panel left = new Panel();
             left.BackColor = PanelBg;
             left.Location = new Point(16, 64);
-            left.Size = new Size(380, 440);
+            left.Size = new Size(380, 460);
             Controls.Add(left);
 
             left.Controls.Add(MakeCaption("ПАПКА ДЛЯ ОБМЕНА", 18, 14));
@@ -189,12 +193,24 @@ namespace PhoneDrive
             _btnOpen.Click += delegate { OpenFolder(); };
             left.Controls.Add(_btnOpen);
 
-            left.Controls.Add(MakeCaption("ИМЯ WI-FI СЕТИ", 18, 64));
-            _txtSsid = MakeInput(18, 82, 344);
+            left.Controls.Add(MakeCaption("АДРЕС СЕРВЕРА (ПУСТО — АВТО)", 18, 64));
+            _txtServerIp = MakeInput(18, 82, 258);
+            left.Controls.Add(_txtServerIp);
+
+            _btnAutoIp = MakeFlatButton("Авто", 282, 81, 74, 28);
+            _btnAutoIp.Click += delegate
+            {
+                _txtServerIp.Text = "";
+                Log("Адрес сервера: авто (определим при включении).");
+            };
+            left.Controls.Add(_btnAutoIp);
+
+            left.Controls.Add(MakeCaption("ИМЯ WI-FI СЕТИ", 18, 112));
+            _txtSsid = MakeInput(18, 130, 344);
             left.Controls.Add(_txtSsid);
 
-            left.Controls.Add(MakeCaption("ПАРОЛЬ WI-FI (МИНИМУМ 8 СИМВОЛОВ)", 18, 112));
-            _txtWifiPass = MakeInput(18, 130, 258);
+            left.Controls.Add(MakeCaption("ПАРОЛЬ WI-FI (МИНИМУМ 8 СИМВОЛОВ)", 18, 160));
+            _txtWifiPass = MakeInput(18, 178, 258);
             _txtWifiPass.PasswordChar = '\u25CF';
             left.Controls.Add(_txtWifiPass);
 
@@ -204,19 +220,19 @@ namespace PhoneDrive
             _chkShowWifi.ForeColor = Muted;
             _chkShowWifi.FlatStyle = FlatStyle.System;
             _chkShowWifi.AutoSize = true;
-            _chkShowWifi.Location = new Point(282, 133);
+            _chkShowWifi.Location = new Point(282, 181);
             _chkShowWifi.CheckedChanged += delegate
             {
                 _txtWifiPass.PasswordChar = _chkShowWifi.Checked ? '\0' : '\u25CF';
             };
             left.Controls.Add(_chkShowWifi);
 
-            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 160));
-            _txtLogin = MakeInput(18, 178, 344);
+            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 208));
+            _txtLogin = MakeInput(18, 226, 344);
             left.Controls.Add(_txtLogin);
 
-            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 208));
-            _txtLoginPass = MakeInput(18, 226, 258);
+            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 256));
+            _txtLoginPass = MakeInput(18, 274, 258);
             _txtLoginPass.PasswordChar = '\u25CF';
             left.Controls.Add(_txtLoginPass);
 
@@ -226,7 +242,7 @@ namespace PhoneDrive
             _chkShowPass.ForeColor = Muted;
             _chkShowPass.FlatStyle = FlatStyle.System;
             _chkShowPass.AutoSize = true;
-            _chkShowPass.Location = new Point(282, 229);
+            _chkShowPass.Location = new Point(282, 277);
             _chkShowPass.CheckedChanged += delegate
             {
                 _txtLoginPass.PasswordChar = _chkShowPass.Checked ? '\0' : '\u25CF';
@@ -239,7 +255,7 @@ namespace PhoneDrive
             _chkWeb.ForeColor = TextColor;
             _chkWeb.AutoSize = true;
             _chkWeb.FlatStyle = FlatStyle.System;
-            _chkWeb.Location = new Point(18, 256);
+            _chkWeb.Location = new Point(18, 304);
             left.Controls.Add(_chkWeb);
 
             _chkLan = new CheckBox();
@@ -248,7 +264,7 @@ namespace PhoneDrive
             _chkLan.ForeColor = TextColor;
             _chkLan.AutoSize = true;
             _chkLan.FlatStyle = FlatStyle.System;
-            _chkLan.Location = new Point(18, 278);
+            _chkLan.Location = new Point(18, 326);
             _chkLan.CheckedChanged += delegate
             {
                 _cfg.UseHomeNetwork = _chkLan.Checked;
@@ -259,7 +275,7 @@ namespace PhoneDrive
             _btnToggle = new Button();
             _btnToggle.Text = "Включить";
             _btnToggle.Font = new Font("Segoe UI", 11.5f, FontStyle.Bold);
-            _btnToggle.Location = new Point(18, 304);
+            _btnToggle.Location = new Point(18, 352);
             _btnToggle.Size = new Size(344, 44);
             _btnToggle.FlatStyle = FlatStyle.Flat;
             _btnToggle.FlatAppearance.BorderSize = 0;
@@ -276,7 +292,7 @@ namespace PhoneDrive
             _lblStatus.Font = new Font("Segoe UI", 9.5f);
             _lblStatus.ForeColor = Muted;
             _lblStatus.AutoSize = true;
-            _lblStatus.Location = new Point(18, 356);
+            _lblStatus.Location = new Point(18, 404);
             left.Controls.Add(_lblStatus);
 
             _btnCleanup = new Button();
@@ -287,7 +303,7 @@ namespace PhoneDrive
             _btnCleanup.BackColor = PanelBg;
             _btnCleanup.ForeColor = Muted;
             _btnCleanup.Size = new Size(344, 26);
-            _btnCleanup.Location = new Point(18, 380);
+            _btnCleanup.Location = new Point(18, 428);
             _btnCleanup.TextAlign = ContentAlignment.MiddleLeft;
             _btnCleanup.Cursor = Cursors.Hand;
             _btnCleanup.Click += delegate { CleanupAccount(); };
@@ -297,7 +313,7 @@ namespace PhoneDrive
             Panel right = new Panel();
             right.BackColor = PanelBg;
             right.Location = new Point(412, 64);
-            right.Size = new Size(600, 440);
+            right.Size = new Size(600, 460);
             Controls.Add(right);
 
             Label guideCaption = new Label();
@@ -411,20 +427,23 @@ namespace PhoneDrive
 
             // раскладка закреплена: появление/скрытие панелей меняет и размер окна
             int targetWidth = _guideVisible ? 1028 : 412;
-            int targetHeight = _logPanel.Visible ? 660 : 520;
+            int targetHeight = _logPanel.Visible ? 680 : 540;
 
             int chromeWidth = Math.Max(0, Width - ClientSize.Width);
             int chromeHeight = Math.Max(0, Height - ClientSize.Height);
 
             // минимум считаем от самого компактного состояния (всё закрыто),
             // чтобы пользователь мог свободно сужать окно при открытой инструкции
-            MinimumSize = new Size(412 + chromeWidth, 520 + chromeHeight);
+            MinimumSize = new Size(412 + chromeWidth, 540 + chromeHeight);
             ClientSize = new Size(targetWidth, targetHeight);
         }
 
         private void LayoutPanels()
         {
             if (_leftPanel == null || _rightPanel == null || _logPanel == null) { return; }
+
+            // при узком окне подзаголовок не влезает рядом с кнопками шапки
+            if (_lblSubtitle != null) { _lblSubtitle.Visible = ClientSize.Width > 600; }
 
             int pad = 16;
             int top = 64;
@@ -581,9 +600,10 @@ namespace PhoneDrive
                 bool lan = _cfg.UseHomeNetwork;
                 GuideHeading(lan ? "\u25CF  Доступ через домашнюю сеть" : "\u25CF  Точка доступа работает", AccentOk);
 
-                // в рабочем режиме инструкция не нужна — только адрес, чтобы
-                // пользователь видел, что и куда вводить
+                // в рабочем режиме не перегружаем: адрес и то, к чему заходить
                 string server = "smb://" + _activeIp;
+                GuideStep("1", "На iPhone: «Файлы» → «Обзор» → «…» вверху справа → «Подключиться к серверу»");
+                GuideStep("2", "Введите адрес сервера");
                 GuideField("СЕРВЕР", server, server, false);
                 GuideParagraph("Введите только адрес — без папки и пробела. Логин и пароль слева. "
                     + "Папку «" + _activeShare + "» выберите внутри сервера.");
@@ -673,6 +693,7 @@ namespace PhoneDrive
         private void LoadIntoUi()
         {
             _txtFolder.Text = _cfg.Folder;
+            _txtServerIp.Text = string.IsNullOrEmpty(_cfg.IpOverride) ? "" : _cfg.IpOverride;
             _txtSsid.Text = _cfg.Ssid;
             _txtWifiPass.Text = _cfg.WifiPassword;
             _txtLogin.Text = _cfg.Login;
@@ -684,6 +705,7 @@ namespace PhoneDrive
         private void SaveFromUi()
         {
             _cfg.Folder = _txtFolder.Text.Trim();
+            _cfg.IpOverride = _txtServerIp.Text.Trim();
             _cfg.Ssid = _txtSsid.Text.Trim();
             _cfg.WifiPassword = _txtWifiPass.Text;
             _cfg.Login = _txtLogin.Text.Trim();
@@ -698,6 +720,10 @@ namespace PhoneDrive
         {
             string folder = _txtFolder.Text.Trim();
             if (folder.Length > 0 && Directory.Exists(folder)) { _cfg.Folder = folder; }
+
+            string ip = _txtServerIp.Text.Trim();
+            // молча исправляем на авто, если пользователь ввёл не ip-адрес
+            _cfg.IpOverride = ip.Length == 0 || IsIPv4(ip) ? ip : "";
 
             string ssid = _txtSsid.Text.Trim();
             if (ssid.Length > 0) { _cfg.Ssid = ssid; }
@@ -721,6 +747,8 @@ namespace PhoneDrive
             _txtFolder.Enabled = editable;
             _btnBrowse.Enabled = editable;
             _btnOpen.Enabled = true;
+            _txtServerIp.Enabled = editable;
+            _btnAutoIp.Enabled = editable;
             _txtSsid.Enabled = wifiEditable;
             _txtWifiPass.Enabled = wifiEditable;
             _chkShowWifi.Enabled = wifiEditable;
@@ -839,7 +867,17 @@ namespace PhoneDrive
 
             if (_cfg.UseHomeNetwork)
             {
-                string ip = FindLocalAddress();
+                // адрес задаётся вручную; если поле пустое — определяем сами
+                string ip = _txtServerIp.Text.Trim();
+                if (ip.Length == 0)
+                {
+                    ip = FindLocalAddress();
+                }
+                else
+                {
+                    Log("Адрес сервера задан вручную: " + ip);
+                }
+
                 if (string.IsNullOrEmpty(ip))
                 {
                     MessageBox.Show(this,
@@ -874,6 +912,13 @@ namespace PhoneDrive
             string folder = _txtFolder.Text.Trim();
             if (folder.Length == 0) { return "Выберите папку для обмена."; }
             if (!Directory.Exists(folder)) { return "Папка не существует:\r\n" + folder; }
+
+            string ip = _txtServerIp.Text.Trim();
+            if (ip.Length > 0 && !IsIPv4(ip))
+            {
+                return "Адрес сервера должен быть ip-адресом вида 192.168.0.152,\r\n"
+                    + "либо оставьте поле пустым — тогда адрес определится сам.";
+            }
 
             string ssid = _txtSsid.Text.Trim();
             string wifiPassword = _txtWifiPass.Text;
@@ -1330,6 +1375,21 @@ namespace PhoneDrive
             }
             catch (ObjectDisposedException) { }
             catch (InvalidOperationException) { }
+        }
+
+        private static bool IsIPv4(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) { return false; }
+
+            string[] parts = text.Split('.');
+            if (parts.Length != 4) { return false; }
+
+            foreach (string part in parts)
+            {
+                int value;
+                if (!int.TryParse(part, out value) || value < 0 || value > 255) { return false; }
+            }
+            return true;
         }
 
         private static string Value(Dictionary<string, string> data, string key, string fallback)
