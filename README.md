@@ -3,6 +3,10 @@
 Turn a folder on your Windows PC into a network drive for your iPhone — wirelessly,
 over Wi-Fi, right inside the **Files** app. No cable, no iTunes, no iCloud, no cloud.
 
+> **Where to get the app:** a ready-to-run `PhoneDrive.exe` is in the [`bin`](bin) folder
+> of this repo, or download it from the
+> [Releases page](https://github.com/Zikurt/phone-drive/releases).
+
 The files stay on your PC: nothing is uploaded, copied or synced.
 
 ```
@@ -221,6 +225,9 @@ MIT — see [LICENSE](LICENSE).
 Папка на компьютере появляется на iPhone как сетевой диск в приложении **«Файлы»** —
 по Wi-Fi, без кабеля, iTunes, iCloud и облаков. Файлы физически лежат на компьютере,
 ничего не копируется и не синхронизируется.
+
+> **Где взять программу:** готовый `PhoneDrive.exe` лежит в папке [`bin`](bin), либо
+> скачайте его с [страницы релизов](https://github.com/Zikurt/phone-drive/releases).
 
 ## Что нужно
 
