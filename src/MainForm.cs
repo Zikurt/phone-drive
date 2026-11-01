@@ -376,15 +376,17 @@ namespace PhoneDrive
         }
 
         /// <summary>
-        /// В точке доступа адрес компьютера фиксированный (192.168.137.1);
-        /// ручной адрес осмыслен только в домашней сети.
+        /// Windows жёстко задаёт адресу точки доступа 192.168.137.1 (проверено:
+        /// реестр ScopeAddress и netsh на адаптер остальным не помогают —
+        /// DHCP сервер остаётся на 192.168.137.1), поэтому ручной адрес
+        /// осмыслен только в домашней сети.
         /// </summary>
         private void UpdateIpCaption()
         {
             if (_lblIpCaption == null) { return; }
             _lblIpCaption.Text = _cfg.UseHomeNetwork
                 ? "АДРЕС СЕРВЕРА (ПУСТО — АВТО)"
-                : "АДРЕС СЕРВЕРА (В ТОЧКЕ ДОСТУПА — 192.168.137.1)";
+                : "АДРЕС ТОЧКИ ДОСТУПА — 192.168.137.1 (ЗАДАН WINDOWS)";
         }
 
         /// <summary>
@@ -764,8 +766,8 @@ namespace PhoneDrive
             _txtFolder.Enabled = editable;
             _btnBrowse.Enabled = editable;
             _btnOpen.Enabled = true;
-            _txtServerIp.Enabled = editable;
-            _btnAutoIp.Enabled = editable;
+            _txtServerIp.Enabled = editable && _cfg.UseHomeNetwork;
+            _btnAutoIp.Enabled = editable && _cfg.UseHomeNetwork;
             _txtSsid.Enabled = wifiEditable;
             _txtWifiPass.Enabled = wifiEditable;
             _chkShowWifi.Enabled = wifiEditable;
