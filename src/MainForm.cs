@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -74,6 +75,7 @@ namespace PhoneDrive
         private Button _btnGuide;
         private Button _btnLog;
         private CheckBox _chkShowPass;
+        private ComboBox _cmbBand;
         private bool _guideVisible = false;
 
         public MainForm(bool autoStart)
@@ -121,7 +123,7 @@ namespace PhoneDrive
             Font = new Font("Segoe UI", 9f);
             AutoScaleMode = AutoScaleMode.Dpi;
             AutoScaleDimensions = new SizeF(96f, 96f);
-            ClientSize = new Size(1028, 520);
+            ClientSize = new Size(1028, 540);
             StartPosition = FormStartPosition.CenterScreen;
             DoubleBuffered = true;
 
@@ -175,7 +177,7 @@ namespace PhoneDrive
             Panel left = new Panel();
             left.BackColor = PanelBg;
             left.Location = new Point(16, 64);
-            left.Size = new Size(380, 440);
+            left.Size = new Size(380, 460);
             Controls.Add(left);
 
             left.Controls.Add(MakeCaption("ПАПКА ДЛЯ ОБМЕНА", 18, 14));
@@ -213,12 +215,22 @@ namespace PhoneDrive
             };
             left.Controls.Add(_chkShowWifi);
 
-            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 160));
-            _txtLogin = MakeInput(18, 178, 344);
+            left.Controls.Add(MakeCaption("ЧАСТОТА ТОЧКИ ДОСТУПА (2,4 ГГЦ — РЕКОМЕНДУЕТСЯ)", 18, 160));
+            _cmbBand = new ComboBox();
+            _cmbBand.DropDownStyle = ComboBoxStyle.DropDownList;
+            _cmbBand.Items.Add("2,4 ГГц — рекомендуется");
+            _cmbBand.Items.Add("5 ГГц — быстрее, хуже держит связь");
+            _cmbBand.SelectedIndex = _cfg.Band == "5" ? 1 : 0;
+            _cmbBand.Location = new Point(18, 178);
+            _cmbBand.Width = 344;
+            left.Controls.Add(_cmbBand);
+
+            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 208));
+            _txtLogin = MakeInput(18, 226, 344);
             left.Controls.Add(_txtLogin);
 
-            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 208));
-            _txtLoginPass = MakeInput(18, 226, 258);
+            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 256));
+            _txtLoginPass = MakeInput(18, 274, 258);
             _txtLoginPass.PasswordChar = '\u25CF';
             left.Controls.Add(_txtLoginPass);
 
@@ -228,7 +240,7 @@ namespace PhoneDrive
             _chkShowPass.ForeColor = Muted;
             _chkShowPass.FlatStyle = FlatStyle.System;
             _chkShowPass.AutoSize = true;
-            _chkShowPass.Location = new Point(282, 229);
+            _chkShowPass.Location = new Point(282, 277);
             _chkShowPass.CheckedChanged += delegate
             {
                 _txtLoginPass.PasswordChar = _chkShowPass.Checked ? '\0' : '\u25CF';
@@ -241,7 +253,7 @@ namespace PhoneDrive
             _chkWeb.ForeColor = TextColor;
             _chkWeb.AutoSize = true;
             _chkWeb.FlatStyle = FlatStyle.System;
-            _chkWeb.Location = new Point(18, 256);
+            _chkWeb.Location = new Point(18, 304);
             left.Controls.Add(_chkWeb);
 
             _chkLan = new CheckBox();
@@ -250,7 +262,7 @@ namespace PhoneDrive
             _chkLan.ForeColor = TextColor;
             _chkLan.AutoSize = true;
             _chkLan.FlatStyle = FlatStyle.System;
-            _chkLan.Location = new Point(18, 278);
+            _chkLan.Location = new Point(18, 326);
             _chkLan.CheckedChanged += delegate
             {
                 _cfg.UseHomeNetwork = _chkLan.Checked;
@@ -261,7 +273,7 @@ namespace PhoneDrive
             _btnToggle = new Button();
             _btnToggle.Text = "Включить";
             _btnToggle.Font = new Font("Segoe UI", 11.5f, FontStyle.Bold);
-            _btnToggle.Location = new Point(18, 304);
+            _btnToggle.Location = new Point(18, 352);
             _btnToggle.Size = new Size(344, 44);
             _btnToggle.FlatStyle = FlatStyle.Flat;
             _btnToggle.FlatAppearance.BorderSize = 0;
@@ -278,7 +290,7 @@ namespace PhoneDrive
             _lblStatus.Font = new Font("Segoe UI", 9.5f);
             _lblStatus.ForeColor = Muted;
             _lblStatus.AutoSize = true;
-            _lblStatus.Location = new Point(18, 356);
+            _lblStatus.Location = new Point(18, 404);
             left.Controls.Add(_lblStatus);
 
             _btnCleanup = new Button();
@@ -289,7 +301,7 @@ namespace PhoneDrive
             _btnCleanup.BackColor = PanelBg;
             _btnCleanup.ForeColor = Muted;
             _btnCleanup.Size = new Size(344, 26);
-            _btnCleanup.Location = new Point(18, 380);
+            _btnCleanup.Location = new Point(18, 428);
             _btnCleanup.TextAlign = ContentAlignment.MiddleLeft;
             _btnCleanup.Cursor = Cursors.Hand;
             _btnCleanup.Click += delegate { CleanupAccount(); };
@@ -299,7 +311,7 @@ namespace PhoneDrive
             Panel right = new Panel();
             right.BackColor = PanelBg;
             right.Location = new Point(412, 64);
-            right.Size = new Size(600, 440);
+            right.Size = new Size(600, 460);
             Controls.Add(right);
 
             Label guideCaption = new Label();
@@ -413,14 +425,14 @@ namespace PhoneDrive
 
             // раскладка закреплена: появление/скрытие панелей меняет и размер окна
             int targetWidth = _guideVisible ? 1028 : 412;
-            int targetHeight = _logPanel.Visible ? 660 : 520;
+            int targetHeight = _logPanel.Visible ? 680 : 540;
 
             int chromeWidth = Math.Max(0, Width - ClientSize.Width);
             int chromeHeight = Math.Max(0, Height - ClientSize.Height);
 
             // минимум считаем от самого компактного состояния (всё закрыто),
             // чтобы пользователь мог свободно сужать окно при открытой инструкции
-            MinimumSize = new Size(412 + chromeWidth, 520 + chromeHeight);
+            MinimumSize = new Size(412 + chromeWidth, 540 + chromeHeight);
             ClientSize = new Size(targetWidth, targetHeight);
         }
 
@@ -680,6 +692,7 @@ namespace PhoneDrive
         {
             _txtFolder.Text = _cfg.Folder;
             _txtSsid.Text = _cfg.Ssid;
+            _cmbBand.SelectedIndex = _cfg.Band == "5" ? 1 : 0;
             _txtWifiPass.Text = _cfg.WifiPassword;
             _txtLogin.Text = _cfg.Login;
             _txtLoginPass.Text = _cfg.LoginPassword;
@@ -691,6 +704,7 @@ namespace PhoneDrive
         {
             _cfg.Folder = _txtFolder.Text.Trim();
             _cfg.Ssid = _txtSsid.Text.Trim();
+            _cfg.Band = _cmbBand.SelectedIndex == 1 ? "5" : "2.4";
             _cfg.WifiPassword = _txtWifiPass.Text;
             _cfg.Login = _txtLogin.Text.Trim();
             _cfg.LoginPassword = _txtLoginPass.Text;
@@ -707,6 +721,11 @@ namespace PhoneDrive
 
             string ssid = _txtSsid.Text.Trim();
             if (ssid.Length > 0) { _cfg.Ssid = ssid; }
+
+            if (_cmbBand != null && _cmbBand.SelectedIndex >= 0)
+            {
+                _cfg.Band = _cmbBand.SelectedIndex == 1 ? "5" : "2.4";
+            }
 
             string login = _txtLogin.Text.Trim();
             if (login.Length > 0) { _cfg.Login = login; }
@@ -730,6 +749,7 @@ namespace PhoneDrive
             _txtSsid.Enabled = wifiEditable;
             _txtWifiPass.Enabled = wifiEditable;
             _chkShowWifi.Enabled = wifiEditable;
+            _cmbBand.Enabled = editable && !_cfg.UseHomeNetwork;
             _txtLogin.Enabled = editable;
             _txtLoginPass.Enabled = editable;
             _chkShowPass.Enabled = editable;
@@ -860,6 +880,16 @@ namespace PhoneDrive
                 _activeUser = _cfg.Login;
                 _activeShare = ShareName;
                 Log("Режим без точки доступа: используем домашнюю сеть, адрес компьютера " + ip);
+
+                string homeBand = HomeWifiBand();
+                if (!string.IsNullOrEmpty(homeBand))
+                {
+                    Log("Домашняя сеть Wi-Fi работает на частоте " + homeBand + ".");
+                }
+                else
+                {
+                    Log("Домашняя сеть Wi-Fi: частоту определить не удалось (возможно, подключение по кабелю).");
+                }
             }
 
             SaveFromUi();
@@ -1358,6 +1388,61 @@ namespace PhoneDrive
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Частота беспроводной сети, к которой подключён компьютер.
+        /// Разбор вывода netsh (поля «Канал»/«Channel» и «Диапазон»/«Band»);
+        /// работает при правах администратора, которых процесс уже имеет.
+        /// </summary>
+        private static string HomeWifiBand()
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = Path.Combine(Environment.SystemDirectory, "netsh.exe");
+                psi.Arguments = "wlan show interfaces";
+                psi.UseShellExecute = false;
+                psi.CreateNoWindow = true;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+
+                using (Process p = Process.Start(psi))
+                {
+                    string text = p.StandardOutput.ReadToEnd();
+                    p.StandardError.ReadToEnd();
+                    p.WaitForExit(5000);
+
+                    // диапазон указан словом: «Диапазон : 5 ГГц» / «Band : 5 GHz»
+                    Match band = Regex.Match(text,
+                        @"^\s*(?:Диапазон|Band)\s*:?\s*(?<num>\d+[\.,]\d+|\d+)?\s*(?<unit>ГГц|GHz)",
+                        RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    if (band.Success)
+                    {
+                        if (band.Groups["num"].Success && band.Groups["num"].Value.StartsWith("2"))
+                        {
+                            return "2,4 ГГц";
+                        }
+                        return "5 ГГц";
+                    }
+
+                    // иначе считаем по каналу: 1..13 — 2,4 ГГц, от 36 и выше — 5 ГГц
+                    Match channel = Regex.Match(text,
+                        @"^\s*(?:Канал|Channel)\s*:?\s*(\d+)",
+                        RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    if (channel.Success)
+                    {
+                        int number;
+                        if (int.TryParse(channel.Groups[1].Value, out number) && number >= 1)
+                        {
+                            return number >= 14 ? "5 ГГц" : "2,4 ГГц";
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            return null;
         }
 
         private void RelaunchElevated(bool autoStart)

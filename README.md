@@ -126,7 +126,7 @@ Everything is reversible and can be removed with the
 | SMB share | `\\192.168.137.1\PhoneDrive` points at the folder you chose. |
 | NTFS permissions | The `phonedrive` user gets "Modify" only on the chosen folder. Revoked on stop. |
 | Firewall rule | Inbound TCP 445 (and TCP 8080 for the web UI) **only from the hotspot/home subnet**. Removed on stop. |
-| Wi-Fi band | **2.4 GHz** by default — iPhone finds the network faster and it penetrates walls better. For higher speed set `band=5` in `settings.ini`. |
+| Wi-Fi band | Choose **2.4 GHz** (recommended — iPhone finds the network faster) or **5 GHz** in the left panel; applies to the hotspot. In home-network mode the journal shows the actual band of your Wi-Fi. |
 | Settings | `%APPDATA%\PhoneDrive\settings.ini` (folder, passwords, web port). |
 
 Passwords are generated randomly on first run and can be changed in the app window.
@@ -282,7 +282,7 @@ MIT — see [LICENSE](LICENSE).
 | Сетевая папка (SMB) | `\\192.168.137.1\PhoneDrive` указывает на выбранную папку. |
 | Права NTFS | Пользователю `phonedrive` выдаётся «Изменение» только на выбранную папку. При выключении снимается. |
 | Брандмауэр | Входящий TCP 445 (и 8080 для веба) **только из подсети точки доступа/домашней сети**. Удаляется при выключении. |
-| Диапазон | По умолчанию **2,4 ГГц** — iPhone быстрее находит сеть. Для скорости поставьте `band=5` в `settings.ini`. |
+| Диапазон | В левой панели выбираете **2,4 ГГц (рекомендуется)** или **5 ГГц** — применяется к точке доступа. В режиме домашней сети журнал показывает фактическую частоту вашего Wi-Fi. |
 | Настройки | `%APPDATA%\PhoneDrive\settings.ini` (папка, пароли, порт). |
 
 Пароли генерируются случайно при первом запуске, меняются в окне программы.
