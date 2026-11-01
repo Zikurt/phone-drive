@@ -50,6 +50,7 @@ namespace PhoneDrive
 
         // --- элементы управления ---------------------------------------------
         private TextBox _txtFolder;
+        private Label _lblIpCaption;
         private TextBox _txtServerIp;
         private Button _btnAutoIp;
         private TextBox _txtSsid;
@@ -193,7 +194,8 @@ namespace PhoneDrive
             _btnOpen.Click += delegate { OpenFolder(); };
             left.Controls.Add(_btnOpen);
 
-            left.Controls.Add(MakeCaption("АДРЕС СЕРВЕРА (ПУСТО — АВТО)", 18, 64));
+            _lblIpCaption = MakeCaption("АДРЕС СЕРВЕРА (ПУСТО — АВТО)", 18, 64);
+            left.Controls.Add(_lblIpCaption);
             _txtServerIp = MakeInput(18, 82, 258);
             left.Controls.Add(_txtServerIp);
 
@@ -268,6 +270,7 @@ namespace PhoneDrive
             _chkLan.CheckedChanged += delegate
             {
                 _cfg.UseHomeNetwork = _chkLan.Checked;
+                UpdateIpCaption();
                 SetUiState();
             };
             left.Controls.Add(_chkLan);
@@ -363,11 +366,25 @@ namespace PhoneDrive
             _rightPanel = right;
             _logPanel = logPanel;
 
+            UpdateIpCaption();
+
             // создаём хэндл заранее: иначе размер рамки окна ещё не известен
             // и MinimumSize посчитается неверным
             IntPtr formHandle = Handle;
 
             UpdateLayoutState();
+        }
+
+        /// <summary>
+        /// В точке доступа адрес компьютера фиксированный (192.168.137.1);
+        /// ручной адрес осмыслен только в домашней сети.
+        /// </summary>
+        private void UpdateIpCaption()
+        {
+            if (_lblIpCaption == null) { return; }
+            _lblIpCaption.Text = _cfg.UseHomeNetwork
+                ? "АДРЕС СЕРВЕРА (ПУСТО — АВТО)"
+                : "АДРЕС СЕРВЕРА (В ТОЧКЕ ДОСТУПА — 192.168.137.1)";
         }
 
         /// <summary>
@@ -988,6 +1005,13 @@ namespace PhoneDrive
                     }
 
                     _wfdMode = local;
+
+                    if (!string.IsNullOrEmpty(_cfg.IpOverride))
+                    {
+                        Log("Замечание: адрес «" + _cfg.IpOverride + "» в точке доступа не применяется — "
+                            + "телефон видит компьютер только по 192.168.137.1.");
+                    }
+
                     _activeIp = Value(tether, "HOSTIP", "192.168.137.1");
                     _activeSsid = Value(tether, "SSID", _cfg.Ssid);
                     _activeUser = _cfg.Login;
