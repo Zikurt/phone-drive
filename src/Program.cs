@@ -55,6 +55,9 @@ namespace PhoneDrive
                     Report(e.ExceptionObject as Exception);
                 };
 
+                // по завершении работы убираем извлечённые из ресурсов скрипты
+                Application.ApplicationExit += delegate { PhoneDrive.ScriptRunner.CleanupEmbeddedScripts(); };
+
                 Application.Run(new MainForm(autoStart));
             }
         }

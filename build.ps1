@@ -54,19 +54,33 @@ $compilerArgs = @(
     '/reference:System.Windows.Forms.dll'
 )
 
+# Встраиваем скрипты внутрь exe (ресурс ldr.<имя>), чтобы программу можно
+# было переносить одним файлом — папка scripts рядом не нужна.
+$resourceArgs = @()
+if (Test-Path -LiteralPath (Join-Path $root 'scripts')) {
+    Get-ChildItem -LiteralPath (Join-Path $root 'scripts') |
+        Where-Object { $_.Extension -in '.ps1', '.bat', '.cmd' } |
+        ForEach-Object {
+            $resourceArgs += ('/resource:' + $_.FullName + ',ldr.' + $_.Name)
+        }
+    Write-Host ('Встраиваем скрипты (' + $resourceArgs.Count + ' шт.)...') -ForegroundColor Cyan
+} else {
+    Write-Host 'Папка scripts не найдена — в exe не будет скриптов.' -ForegroundColor Yellow
+}
+
 Write-Host 'Компиляция...' -ForegroundColor Cyan
-& $csc $compilerArgs $sources
+& $csc $compilerArgs $resourceArgs $sources
 if ($LASTEXITCODE -ne 0) { throw "Сборка не удалась (код $LASTEXITCODE)." }
 
-# скрипты должны лежать рядом с exe
-$scriptsTarget = Join-Path $outDir 'scripts'
-if (-not (Test-Path -LiteralPath $scriptsTarget)) {
-    New-Item -ItemType Directory -Path $scriptsTarget -Force | Out-Null
-} elseif (-not $appRunning) {
-    # при запущенной старой копии не удаляем папку: она ещё может понадобиться ей для очистки
-    Remove-Item -LiteralPath $scriptsTarget -Recurse -Force
-    New-Item -ItemType Directory -Path $scriptsTarget -Force | Out-Null
+# Скрипты теперь зашиты в exe — папку bin\scripts больше не создаём;
+# старую копию, если она осталась от прошлых сборок, убираем.
+$staleScripts = Join-Path $outDir 'scripts'
+if (Test-Path -LiteralPath $staleScripts) {
+    if ($appRunning) {
+        Write-Host 'Папка bin\scripts оставлена (приложение ещё запущено).' -ForegroundColor Yellow
+    } else {
+        Remove-Item -LiteralPath $staleScripts -Recurse -Force
+    }
 }
-Copy-Item -Path (Join-Path $root 'scripts\*') -Destination $scriptsTarget -Force
 
 Write-Host ('Готово: ' + $exe) -ForegroundColor Green

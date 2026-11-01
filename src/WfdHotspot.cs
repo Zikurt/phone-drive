@@ -55,7 +55,7 @@ namespace PhoneDrive
             Dictionary<string, string> result = NewResult();
             Stop(0); // на случай неудачной прошлой попытки
 
-            string script = Path.Combine(ScriptRunner.ScriptsDirectory, ScriptWfd);
+            string script = ScriptRunner.ResolveScript(ScriptWfd);
             if (!File.Exists(script))
             {
                 result["OK"] = "0";
@@ -79,7 +79,7 @@ namespace PhoneDrive
             info.UseShellExecute = false;
             info.CreateNoWindow = true;
             info.WindowStyle = ProcessWindowStyle.Hidden;
-            info.WorkingDirectory = ScriptRunner.ScriptsDirectory;
+            info.WorkingDirectory = Path.GetDirectoryName(script);
             info.EnvironmentVariables["PD_ACTION"] = "start";
             info.EnvironmentVariables["PD_SSID"] = ssid == null ? "" : ssid;
             info.EnvironmentVariables["PD_PASS"] = password == null ? "" : password;

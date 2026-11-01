@@ -67,6 +67,14 @@ namespace PhoneDrive
         private TextBox _txtLog;
         private int _gy;
 
+        private Panel _leftPanel;
+        private Panel _rightPanel;
+        private Panel _logPanel;
+        private Button _btnGuide;
+        private Button _btnLog;
+        private CheckBox _chkShowPass;
+        private bool _guideVisible = true;
+
         public MainForm(bool autoStart)
         {
             _autoStart = autoStart;
@@ -112,9 +120,8 @@ namespace PhoneDrive
             Font = new Font("Segoe UI", 9f);
             AutoScaleMode = AutoScaleMode.Dpi;
             AutoScaleDimensions = new SizeF(96f, 96f);
-            ClientSize = new Size(1180, 700);
+            ClientSize = new Size(1028, 520);
             StartPosition = FormStartPosition.CenterScreen;
-            MinimumSize = new Size(1100, 660);
             DoubleBuffered = true;
 
             try
@@ -126,49 +133,68 @@ namespace PhoneDrive
                 // остаётся значок по умолчанию
             }
 
+            // ---- верхняя графа: заголовок + переключатели Инструкция/Журнал ----
+            Panel header = new Panel();
+            header.BackColor = Bg;
+            header.Location = new Point(0, 0);
+            header.Size = new Size(1028, 56);
+            header.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            Controls.Add(header);
+
             Label title = new Label();
             title.Text = "Wi-Fi Флешка";
-            title.Font = new Font("Segoe UI", 17f, FontStyle.Bold);
+            title.Font = new Font("Segoe UI", 15f, FontStyle.Bold);
             title.ForeColor = TextColor;
             title.AutoSize = true;
-            title.Location = new Point(24, 16);
-            Controls.Add(title);
+            title.Location = new Point(16, 4);
+            header.Controls.Add(title);
 
             Label subtitle = new Label();
-            subtitle.Text = "Папка компьютера становится сетевым диском на iPhone — без кабеля и iTunes";
-            subtitle.Font = new Font("Segoe UI", 9.5f);
+            subtitle.Text = "Папка компьютера — сетевой диск на iPhone";
+            subtitle.Font = new Font("Segoe UI", 8.5f);
             subtitle.ForeColor = Muted;
             subtitle.AutoSize = true;
-            subtitle.Location = new Point(26, 52);
-            Controls.Add(subtitle);
+            subtitle.Location = new Point(18, 34);
+            header.Controls.Add(subtitle);
+
+            _btnGuide = MakeViewButton("Инструкция", 118);
+            _btnGuide.Location = new Point(header.Width - 16 - 118, 11);
+            _btnGuide.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            _btnGuide.Click += delegate { ToggleInstruction(); };
+            header.Controls.Add(_btnGuide);
+
+            _btnLog = MakeViewButton("Журнал", 92);
+            _btnLog.Location = new Point(_btnGuide.Left - 8 - 92, 11);
+            _btnLog.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            _btnLog.Click += delegate { ToggleJournal(); };
+            header.Controls.Add(_btnLog);
 
             // ---- левая панель: настройки ------------------------------------
             Panel left = new Panel();
             left.BackColor = PanelBg;
-            left.Location = new Point(24, 92);
-            left.Size = new Size(400, 440);
-            left.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom;
+            left.Location = new Point(16, 64);
+            left.Size = new Size(380, 440);
             Controls.Add(left);
 
             left.Controls.Add(MakeCaption("ПАПКА ДЛЯ ОБМЕНА", 18, 14));
-            _txtFolder = MakeInput(18, 32, 196);
+            _txtFolder = MakeInput(18, 32, 180);
             _txtFolder.ReadOnly = true;
             left.Controls.Add(_txtFolder);
 
-            _btnBrowse = MakeFlatButton("Выбрать", 220, 31, 78, 28);
+            _btnBrowse = MakeFlatButton("Выбрать", 204, 31, 74, 28);
             _btnBrowse.Click += delegate { BrowseFolder(); };
             left.Controls.Add(_btnBrowse);
 
-            _btnOpen = MakeFlatButton("Открыть", 304, 31, 78, 28);
+            _btnOpen = MakeFlatButton("Открыть", 284, 31, 74, 28);
             _btnOpen.Click += delegate { OpenFolder(); };
             left.Controls.Add(_btnOpen);
 
-            left.Controls.Add(MakeCaption("ИМЯ WI-FI СЕТИ", 18, 66));
-            _txtSsid = MakeInput(18, 84, 364);
+            left.Controls.Add(MakeCaption("ИМЯ WI-FI СЕТИ", 18, 64));
+            _txtSsid = MakeInput(18, 82, 344);
             left.Controls.Add(_txtSsid);
 
-            left.Controls.Add(MakeCaption("ПАРОЛЬ WI-FI (МИНИМУМ 8 СИМВОЛОВ)", 18, 118));
-            _txtWifiPass = MakeInput(18, 136, 268);
+            left.Controls.Add(MakeCaption("ПАРОЛЬ WI-FI (МИНИМУМ 8 СИМВОЛОВ)", 18, 112));
+            _txtWifiPass = MakeInput(18, 130, 258);
             _txtWifiPass.PasswordChar = '\u25CF';
             left.Controls.Add(_txtWifiPass);
 
@@ -178,21 +204,34 @@ namespace PhoneDrive
             _chkShowWifi.ForeColor = Muted;
             _chkShowWifi.FlatStyle = FlatStyle.System;
             _chkShowWifi.AutoSize = true;
-            _chkShowWifi.Location = new Point(294, 139);
+            _chkShowWifi.Location = new Point(282, 133);
             _chkShowWifi.CheckedChanged += delegate
             {
                 _txtWifiPass.PasswordChar = _chkShowWifi.Checked ? '\0' : '\u25CF';
             };
             left.Controls.Add(_chkShowWifi);
 
-            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 170));
-            _txtLogin = MakeInput(18, 188, 364);
+            left.Controls.Add(MakeCaption("ЛОГИН НА ТЕЛЕФОНЕ", 18, 160));
+            _txtLogin = MakeInput(18, 178, 344);
             left.Controls.Add(_txtLogin);
 
-            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 222));
-            _txtLoginPass = MakeInput(18, 240, 364);
+            left.Controls.Add(MakeCaption("ПАРОЛЬ НА ТЕЛЕФОНЕ", 18, 208));
+            _txtLoginPass = MakeInput(18, 226, 258);
             _txtLoginPass.PasswordChar = '\u25CF';
             left.Controls.Add(_txtLoginPass);
+
+            _chkShowPass = new CheckBox();
+            _chkShowPass.Text = "показать";
+            _chkShowPass.Font = new Font("Segoe UI", 8.5f);
+            _chkShowPass.ForeColor = Muted;
+            _chkShowPass.FlatStyle = FlatStyle.System;
+            _chkShowPass.AutoSize = true;
+            _chkShowPass.Location = new Point(282, 229);
+            _chkShowPass.CheckedChanged += delegate
+            {
+                _txtLoginPass.PasswordChar = _chkShowPass.Checked ? '\0' : '\u25CF';
+            };
+            left.Controls.Add(_chkShowPass);
 
             _chkWeb = new CheckBox();
             _chkWeb.Text = "Веб-доступ через Safari (запасной вариант)";
@@ -200,7 +239,7 @@ namespace PhoneDrive
             _chkWeb.ForeColor = TextColor;
             _chkWeb.AutoSize = true;
             _chkWeb.FlatStyle = FlatStyle.System;
-            _chkWeb.Location = new Point(18, 276);
+            _chkWeb.Location = new Point(18, 256);
             left.Controls.Add(_chkWeb);
 
             _chkLan = new CheckBox();
@@ -209,7 +248,7 @@ namespace PhoneDrive
             _chkLan.ForeColor = TextColor;
             _chkLan.AutoSize = true;
             _chkLan.FlatStyle = FlatStyle.System;
-            _chkLan.Location = new Point(18, 298);
+            _chkLan.Location = new Point(18, 278);
             _chkLan.CheckedChanged += delegate
             {
                 _cfg.UseHomeNetwork = _chkLan.Checked;
@@ -220,8 +259,8 @@ namespace PhoneDrive
             _btnToggle = new Button();
             _btnToggle.Text = "Включить";
             _btnToggle.Font = new Font("Segoe UI", 11.5f, FontStyle.Bold);
-            _btnToggle.Location = new Point(18, 328);
-            _btnToggle.Size = new Size(364, 46);
+            _btnToggle.Location = new Point(18, 304);
+            _btnToggle.Size = new Size(344, 44);
             _btnToggle.FlatStyle = FlatStyle.Flat;
             _btnToggle.FlatAppearance.BorderSize = 0;
             _btnToggle.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 160, 67);
@@ -237,7 +276,7 @@ namespace PhoneDrive
             _lblStatus.Font = new Font("Segoe UI", 9.5f);
             _lblStatus.ForeColor = Muted;
             _lblStatus.AutoSize = true;
-            _lblStatus.Location = new Point(18, 382);
+            _lblStatus.Location = new Point(18, 356);
             left.Controls.Add(_lblStatus);
 
             _btnCleanup = new Button();
@@ -247,8 +286,8 @@ namespace PhoneDrive
             _btnCleanup.FlatAppearance.BorderSize = 0;
             _btnCleanup.BackColor = PanelBg;
             _btnCleanup.ForeColor = Muted;
-            _btnCleanup.Size = new Size(364, 24);
-            _btnCleanup.Location = new Point(18, 404);
+            _btnCleanup.Size = new Size(344, 26);
+            _btnCleanup.Location = new Point(18, 380);
             _btnCleanup.TextAlign = ContentAlignment.MiddleLeft;
             _btnCleanup.Cursor = Cursors.Hand;
             _btnCleanup.Click += delegate { CleanupAccount(); };
@@ -257,33 +296,31 @@ namespace PhoneDrive
             // ---- правая панель: инструкция ----------------------------------
             Panel right = new Panel();
             right.BackColor = PanelBg;
-            right.Location = new Point(440, 92);
-            right.Size = new Size(716, 440);
-            right.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            right.Location = new Point(412, 64);
+            right.Size = new Size(600, 440);
             Controls.Add(right);
 
             Label guideCaption = new Label();
-            guideCaption.Text = "КАК ПОДКЛЮЧИТЬСЯ С IPHONE";
+            guideCaption.Text = "ПОДКЛЮЧЕНИЕ С IPHONE";
             guideCaption.Font = new Font("Segoe UI", 8f, FontStyle.Bold);
             guideCaption.ForeColor = Muted;
             guideCaption.AutoSize = true;
-            guideCaption.Location = new Point(18, 14);
+            guideCaption.Location = new Point(18, 12);
             right.Controls.Add(guideCaption);
 
             _guide = new Panel();
             _guide.BackColor = PanelBg;
-            _guide.Location = new Point(0, 38);
-            _guide.Size = new Size(right.Width, right.Height - 38);
-            _guide.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            _guide.Location = new Point(0, 34);
+            _guide.Size = new Size(600, 406);
             _guide.AutoScroll = true;
             right.Controls.Add(_guide);
 
             // ---- журнал ------------------------------------------------------
             Panel logPanel = new Panel();
             logPanel.BackColor = PanelBg;
-            logPanel.Location = new Point(24, 548);
-            logPanel.Size = new Size(1132, 132);
-            logPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            logPanel.Location = new Point(16, 512);
+            logPanel.Size = new Size(996, 132);
+            logPanel.Visible = false;
             Controls.Add(logPanel);
 
             Label logCaption = new Label();
@@ -304,8 +341,143 @@ namespace PhoneDrive
             _txtLog.Font = new Font("Consolas", 8.75f);
             _txtLog.Location = new Point(14, 28);
             _txtLog.Size = new Size(logPanel.Width - 28, logPanel.Height - 38);
-            _txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             logPanel.Controls.Add(_txtLog);
+
+            _leftPanel = left;
+            _rightPanel = right;
+            _logPanel = logPanel;
+
+            // создаём хэндл заранее: иначе размер рамки окна ещё не известен
+            // и MinimumSize посчитается неверным
+            IntPtr formHandle = Handle;
+
+            UpdateLayoutState();
+        }
+
+        /// <summary>
+        /// Переключатели вида: окно само подстраивается под открытые
+        /// «Инструкция» и «Журнал» — поэтому и выглядит компактно.
+        /// </summary>
+        private void ToggleInstruction()
+        {
+            _guideVisible = !_guideVisible;
+            UpdateLayoutState();
+        }
+
+        private void ToggleJournal()
+        {
+            if (_logPanel != null) { _logPanel.Visible = !_logPanel.Visible; }
+            UpdateLayoutState();
+        }
+
+        /// <summary>Открывается автоматически перед включением и при ошибках.</summary>
+        private void ShowLog(bool visible)
+        {
+            if (_logPanel == null) { return; }
+            Ui(delegate
+            {
+                if (_logPanel.Visible == visible) { return; }
+                _logPanel.Visible = visible;
+                UpdateLayoutState();
+            });
+        }
+
+        private void UpdateLayoutState()
+        {
+            if (_rightPanel == null) { return; }
+            _rightPanel.Visible = _guideVisible;
+            UpdateViewButtons();
+            UpdateWindowSize();
+            LayoutPanels();
+        }
+
+        private void UpdateViewButtons()
+        {
+            if (_btnGuide != null)
+            {
+                _btnGuide.BackColor = _guideVisible ? PanelBg2 : PanelBg;
+                _btnGuide.ForeColor = _guideVisible ? TextColor : Muted;
+            }
+            if (_btnLog != null && _logPanel != null)
+            {
+                _btnLog.BackColor = _logPanel.Visible ? PanelBg2 : PanelBg;
+                _btnLog.ForeColor = _logPanel.Visible ? TextColor : Muted;
+            }
+        }
+
+        private void UpdateWindowSize()
+        {
+            if (_logPanel == null) { return; }
+
+            // раскладка закреплена: появление/скрытие панелей меняет и размер окна
+            int targetWidth = _guideVisible ? 1028 : 412;
+            int targetHeight = _logPanel.Visible ? 660 : 520;
+
+            int chromeWidth = Math.Max(0, Width - ClientSize.Width);
+            int chromeHeight = Math.Max(0, Height - ClientSize.Height);
+
+            // минимум считаем от самого компактного состояния (всё закрыто),
+            // чтобы пользователь мог свободно сужать окно при открытой инструкции
+            MinimumSize = new Size(412 + chromeWidth, 520 + chromeHeight);
+            ClientSize = new Size(targetWidth, targetHeight);
+        }
+
+        private void LayoutPanels()
+        {
+            if (_leftPanel == null || _rightPanel == null || _logPanel == null) { return; }
+
+            int pad = 16;
+            int top = 64;
+            int logExtra = _logPanel.Visible ? _logPanel.Height + 8 : 0;
+            int contentHeight = Math.Max(200, ClientSize.Height - top - pad - logExtra);
+
+            _leftPanel.SetBounds(pad, top, 380, contentHeight);
+
+            if (_rightPanel.Visible)
+            {
+                int rightWidth = Math.Max(200, ClientSize.Width - pad * 3 - 380);
+                _rightPanel.SetBounds(pad + 380 + pad, top, rightWidth, contentHeight);
+            }
+
+            if (_logPanel.Visible)
+            {
+                _logPanel.SetBounds(
+                    pad,
+                    ClientSize.Height - pad - _logPanel.Height,
+                    Math.Max(100, ClientSize.Width - pad * 2),
+                    _logPanel.Height);
+                _txtLog.SetBounds(14, 28, Math.Max(50, _logPanel.Width - 28), Math.Max(20, _logPanel.Height - 38));
+            }
+
+            if (_rightPanel.Visible && _guide != null)
+            {
+                int guideWidth = _rightPanel.Width;
+                bool widthChanged = guideWidth != _guide.Width;
+                _guide.SetBounds(0, 34, guideWidth, Math.Max(50, _rightPanel.Height - 34));
+                if (widthChanged) { RenderGuide(); }
+            }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            LayoutPanels();
+        }
+
+        private static Button MakeViewButton(string text, int width)
+        {
+            Button button = new Button();
+            button.Text = text;
+            button.Size = new Size(width, 34);
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderColor = BorderColor;
+            button.FlatAppearance.BorderSize = 1;
+            button.BackColor = PanelBg;
+            button.ForeColor = Muted;
+            button.Font = new Font("Segoe UI", 9f);
+            button.Cursor = Cursors.Hand;
+            button.UseVisualStyleBackColor = false;
+            return button;
         }
 
         private static Label MakeCaption(string text, int x, int y)
@@ -409,36 +581,12 @@ namespace PhoneDrive
                 bool lan = _cfg.UseHomeNetwork;
                 GuideHeading(lan ? "\u25CF  Доступ через домашнюю сеть" : "\u25CF  Точка доступа работает", AccentOk);
 
-                if (lan)
-                {
-                    GuideStep("1", "iPhone должен быть в той же сети Wi-Fi");
-                    GuideParagraph("Компьютер: " + _activeIp + ". Оставьте телефон в домашней сети — точка доступа не нужна.");
-                }
-                else
-                {
-                    GuideStep("1", "Подключите iPhone к Wi-Fi");
-                    GuideField("СЕТЬ", _activeSsid, _activeSsid, false);
-                    GuideField("ПАРОЛЬ WI-FI", _cfg.WifiPassword, _cfg.WifiPassword, true);
-                    if (_wfdMode)
-                    {
-                        GuideParagraph("Эта точка доступа работает и без интернета. "
-                            + "iPhone может написать «Нет доступа к интернету» — это нормально, папка всё равно открывается.");
-                    }
-                }
-
-                GuideStep("2", "Откройте «Файлы» → «Обзор» → «…» → «Подключиться к серверу»");
+                // в рабочем режиме инструкция не нужна — только адрес, чтобы
+                // пользователь видел, что и куда вводить
                 string server = "smb://" + _activeIp;
                 GuideField("СЕРВЕР", server, server, false);
-                GuideField("ПОЛЬЗОВАТЕЛЬ", _activeUser, _activeUser, false);
-                GuideField("ПАРОЛЬ", _cfg.LoginPassword, _cfg.LoginPassword, true);
-                GuideParagraph("Только адрес — без пути и пробела. Папку «" + _activeShare + "» выберите внутри.");
-
-                if (_web != null)
-                {
-                    GuideStep("3", "Или через Safari — без логина");
-                    string url = "http://" + _activeIp + ":" + _web.Port + "/";
-                    GuideField("АДРЕС В БРАУЗЕРЕ", url, url, false);
-                }
+                GuideParagraph("Введите только адрес — без папки и пробела. Логин и пароль слева. "
+                    + "Папку «" + _activeShare + "» выберите внутри сервера.");
             }
 
             _guide.ResumeLayout();
@@ -578,6 +726,7 @@ namespace PhoneDrive
             _chkShowWifi.Enabled = wifiEditable;
             _txtLogin.Enabled = editable;
             _txtLoginPass.Enabled = editable;
+            _chkShowPass.Enabled = editable;
             _chkWeb.Enabled = editable;
             _chkLan.Enabled = editable;
             _btnCleanup.Enabled = editable;
@@ -660,6 +809,9 @@ namespace PhoneDrive
 
         private void StartAsync()
         {
+            // журнал открывается сам: пользователь сразу видит, что происходит
+            ShowLog(true);
+
             if (!IsAdministrator())
             {
                 SaveFromUi();
@@ -1076,6 +1228,7 @@ namespace PhoneDrive
         private void Fail(string prefix, Dictionary<string, string> result)
         {
             _running = false;
+            ShowLog(true);
             string message = ScriptRunner.Message(result);
             Log(prefix + ": " + message);
 

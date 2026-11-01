@@ -33,12 +33,19 @@ The files stay on your PC: nothing is uploaded, copied or synced.
   - **SMB** (`smb://…`) — native in the iOS **Files** app.
   - **HTTP** (`http://…:8080`) — optional built-in web UI for Safari (list, download,
     upload, delete, create folders).
+- **Everything in a single file.** All scripts are embedded into `PhoneDrive.exe`
+  as resources — you can copy the exe to another PC without carrying the `scripts`
+  folder along (they are unpacked to `%TEMP%` on launch and removed on exit).
+- **Works even without PowerShell.** On Windows 10/11 PowerShell is always present,
+  but on rare machines it may be missing — in that case PhoneDrive automatically
+  runs the `.cmd` fallbacks (`share.bat`, `hotspot.bat`) built on plain
+  `net.exe` / `icacls` / `netsh`. The Wi-Fi Direct hotspot (offline mode) is the
+  only thing that requires PowerShell.
+- **Compact window.** The *Instruction* and *Journal* panels are toggled by buttons
+  in the top bar; the window resizes itself accordingly.
 - **Safe and reversible.** A dedicated Windows user is created for phone logins, a
   firewall rule is opened only for the hotspot/home subnet, and everything is removed
   with a single "cleanup" button. Passwords are generated randomly on first run.
-- **No install / no build required** — a ready `bin\PhoneDrive.exe` is included.
-- **Pure .NET Framework 4.8 + PowerShell** — builds with the compiler already present
-  in Windows; no Visual Studio, no SDK.
 
 ---
 
@@ -58,8 +65,12 @@ The files stay on your PC: nothing is uploaded, copied or synced.
 1. Double-click **`Запустить.cmd`** (or `bin\PhoneDrive.exe`).
 2. Pick the folder you want to share (default `C:\Users\<you>\PhoneDrive`).
 3. Click **«Включить»** (Start) and approve the UAC prompt.
-4. After a few seconds the right panel shows the network name, Wi-Fi password and
-   server address.
+4. In the top bar you can open **«Инструкция»** (guide) and **«Журнал»** (log);
+   they open and close together with the window. After starting, the guide
+   keeps only the server address (plus one hint) so you always see what to type.
+5. The right panel shows the network name, Wi-Fi password and
+   server address. Passwords in the fields on the left are hidden — press
+   **«показать»** (show) next to a field to reveal it.
 
 > **If the PC and iPhone are already on the same home network**, tick
 > **«Через домашнюю сеть (без точки доступа)»** ("via home network"). No hotspot is
@@ -157,18 +168,20 @@ Visual Studio or .NET SDK needed.
 
 ```
 PhoneDrive/
-├─ bin/                  ready build: PhoneDrive.exe + scripts/
-├─ scripts/
+├─ bin/                  ready build: a single PhoneDrive.exe (scripts are embedded)
+├─ scripts/              same scripts as separate files (for review/development)
 │  ├─ tether.ps1         hotspot (Windows Mobile Hotspot API)
 │  ├─ wfd.ps1            local hotspot without internet (Wi-Fi Direct)
-│  └─ share.ps1          SMB share, service user, NTFS rights, firewall
+│  ├─ share.ps1          SMB share, service user, NTFS rights, firewall
+│  ├─ share.bat          cmd fallback for share
+│  └─ hotspot.bat        cmd fallback for the hotspot
 ├─ src/
 │  ├─ Program.cs         entry point, single-instance
-│  ├─ MainForm.cs        UI and start/stop flows
+│  ├─ MainForm.cs        UI: compact window, Instruction/Journal toggles
 │  ├─ Config.cs          settings and password generation
 │  ├─ ShareService.cs    script wrappers
 │  ├─ WfdHotspot.cs      local hotspot start/stop
-│  ├─ ScriptRunner.cs    runs PowerShell and parses the reply
+│  ├─ ScriptRunner.cs    extracts embedded scripts, picks PowerShell or cmd
 │  ├─ FileWebServer.cs   web access (Safari): list, download, upload
 │  └─ app.manifest       DPI, Windows 10/11 compatibility
 ├─ build.ps1
@@ -213,10 +226,14 @@ MIT — see [LICENSE](LICENSE).
 
 ## Запуск
 
-1. Двойной щелчок по **`Запустить.cmd`** (или `bin\PhoneDrive.exe`).
+1. Двойной щелчок по **`Запустить.cmd`** (или по `bin\PhoneDrive.exe`).
 2. Выберите папку (по умолчанию `C:\Users\<вы>\PhoneDrive`).
 3. Нажмите **«Включить»** и разрешите запрос UAC.
-4. Через несколько секунд справа появятся имя сети, пароль и адрес сервера.
+4. В верхней графе есть кнопки **«Инструкция»** и **«Журнал»** — панели открываются
+   и закрываются по щелчку, а окно само подстраивается под них. Когда доступ уже
+   включён, инструкция показывает только адрес сервера, чтобы вы всегда видели,
+   какой адрес вводить.
+5. Пароли в полях слева скрыты — нажмите **«показать»** рядом с нужным полем.
 
 > **Если компьютер и iPhone уже в одной домашней сети**, поставьте галочку
 > **«Через домашнюю сеть (без точки доступа)»** — точка доступа не создаётся, телефон
